@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "skills": {
+    "fastapi-python": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "computedHash": "4521c6090735152b7b8df670cefe5c1c6d1dcaa115de67bb96e74ebf802d4f24"
+    },
+    "fastapi-templates": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "1a5fe66bd2683afd1db9afdf37a25cd8b9195c369c98489333badf0406fc91b3"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "computedHash": "6337038fe1fe6bbe1b9f252ab678ee575859190bab6f0f246f4061824eb40875"
+    },
+    "web-design-guidelines": {
+      "source": "local",
+      "sourceType": "local",
+      "computedHash": "fc48547ce7b3f384043d0804d823a0c6bd02f4a94a484bc724551d28fcd6b90d"
+    }
+  }
+}

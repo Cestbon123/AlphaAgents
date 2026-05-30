@@ -1,0 +1,8 @@
+Lightweight Charts
+Copyright (c) 2025 TradingView, Inc.
+
+This directory vendors the fixed npm package asset:
+lightweight-charts@5.0.3/dist/lightweight-charts.standalone.production.js
+
+License: Apache License 2.0, see LICENSE in this directory.
+Project: https://github.com/tradingview/lightweight-charts
