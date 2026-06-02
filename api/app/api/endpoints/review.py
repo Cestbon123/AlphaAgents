@@ -30,7 +30,9 @@ def _repository() -> SQLiteWorkflowRepository:
 
 
 @router.get("/operations")
-def list_operation_records(operation_date: date | None = None) -> dict[str, list[dict[str, object]]]:
+def list_operation_records(
+    operation_date: date | None = None,
+) -> dict[str, list[dict[str, object]]]:
     return {"operations": _repository().list_operation_records(operation_date)}
 
 

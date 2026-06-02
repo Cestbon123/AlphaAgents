@@ -5,7 +5,6 @@ from typing import Any
 
 from app.local_data.repository import LocalMarketRepository
 
-
 MARKET_SUFFIXES = {
     "0": "SZ",
     "1": "SH",

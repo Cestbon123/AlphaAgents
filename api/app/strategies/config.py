@@ -3,7 +3,6 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-
 ZHIXING_STRATEGY_ID = "zhixing_trend"
 
 DEFAULT_ZHIXING_PARAMS: dict[str, Any] = {

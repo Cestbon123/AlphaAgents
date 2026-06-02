@@ -13,6 +13,8 @@ def isolated_research_dbs(tmp_path, monkeypatch):
     data_db = tmp_path / "market.db"
     monkeypatch.setenv("ALPHAAGENTS_WORKFLOW_DB", str(workflow_db))
     monkeypatch.setenv("ALPHAAGENTS_DATA_DB", str(data_db))
+    monkeypatch.setenv("ALPHAAGENTS_LLM_API_KEY", "")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "")
     get_settings.cache_clear()
     yield workflow_db, data_db
     get_settings.cache_clear()

@@ -69,6 +69,14 @@ window.AlphaAgentsApi = {
     return response.json();
   },
 
+  async getStockAlerts(symbol) {
+    const response = await fetch(`${this.baseUrl}/stocks/${encodeURIComponent(symbol)}/alerts`);
+    if (!response.ok) {
+      throw new Error(`个股提醒读取失败：${response.status}`);
+    }
+    return response.json();
+  },
+
   async listStockCases(options = {}) {
     const params = new URLSearchParams();
     ["symbol", "query", "kind", "status"].forEach((key) => {
@@ -179,13 +187,10 @@ window.AlphaAgentsApi = {
 
   async listMarketStocks(options = {}) {
     const params = new URLSearchParams();
-    if (options.sector_code) {
-      params.set("sector_code", options.sector_code);
-    }
-    if (options.limit) {
-      params.set("limit", options.limit);
-    }
-    const query = params.toString() ? `?${params.toString()}` : "";
+    if (options.sector_code) params.set("sector_code", options.sector_code);
+    if (options.limit) params.set("limit", options.limit);
+    if (options.offset != null) params.set("offset", options.offset);
+    const query = params.toString() ? "?" + params.toString() : "";
     const response = await fetch(`${this.baseUrl}/market/stocks${query}`);
     if (!response.ok) {
       throw new Error(`stock list read failed: ${response.status}`);
@@ -225,6 +230,68 @@ window.AlphaAgentsApi = {
     });
     if (!response.ok) {
       throw new Error(`AI strategy draft failed: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async listAgentSkills() {
+    const response = await fetch(`${this.baseUrl}/agent/skills`);
+    if (!response.ok) {
+      throw new Error(`Agent skills read failed: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async agentChat(message, sessionId, symbol, context = {}, requestedSkillId = null) {
+    const body = { message };
+    if (sessionId) body.session_id = sessionId;
+    if (symbol) body.symbol = symbol;
+    if (context.current_view) body.current_view = context.current_view;
+    if (context.data_hints) body.data_hints = context.data_hints;
+    if (requestedSkillId) body.requested_skill_id = requestedSkillId;
+    const response = await fetch(`${this.baseUrl}/agent/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      let detail = "";
+      try {
+        const payload = await response.json();
+        detail = payload.detail || "";
+      } catch (error) {
+        detail = "";
+      }
+      throw new Error(detail || `Agent 对话失败：${response.status}`);
+    }
+    if (!response.body) {
+      throw new Error("浏览器不支持流式响应");
+    }
+    return response;
+  },
+
+  async listAgentSessions(limit = 50) {
+    const response = await fetch(`${this.baseUrl}/agent/sessions?limit=${encodeURIComponent(limit)}`);
+    if (!response.ok) {
+      throw new Error(`对话历史读取失败：${response.status}`);
+    }
+    return response.json();
+  },
+
+  async getAgentSession(sessionId) {
+    const response = await fetch(`${this.baseUrl}/agent/sessions/${encodeURIComponent(sessionId)}`);
+    if (!response.ok) {
+      throw new Error(`对话读取失败：${response.status}`);
+    }
+    return response.json();
+  },
+
+  async deleteAgentSession(sessionId) {
+    const response = await fetch(`${this.baseUrl}/agent/sessions/${encodeURIComponent(sessionId)}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(`对话删除失败：${response.status}`);
     }
     return response.json();
   },

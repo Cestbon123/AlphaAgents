@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 EXCLUDED_MARKET_CATEGORIES = {"创业板", "科创板", "北交所"}
 
 

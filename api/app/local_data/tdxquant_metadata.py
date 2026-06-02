@@ -5,7 +5,6 @@ from typing import Any
 from app.local_data.repository import LocalMarketRepository
 from app.strategies.filters import is_st_security
 
-
 MARKET_CATEGORY_BY_LIST_TYPE = {
     51: "创业板",
     52: "科创板",
@@ -46,7 +45,7 @@ def _normalize_profiles(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             or MARKET_CATEGORY_BY_LIST_TYPE.get(list_type)
             or _main_board_category(symbol)
         )
-        is_st = bool(row.get("is_st") or row.get("IsSTGP") in {1, "1", True})
+        is_st = bool(row.get("is_st") or row.get("IsSTGP") in {1, "1"})
         profiles[symbol] = {
             "symbol": symbol,
             "name": name,
@@ -67,7 +66,9 @@ def _normalize_sectors(rows: list[dict[str, Any]]) -> list[dict[str, str]]:
         sectors[code] = {
             "sector_code": code,
             "sector_name": name,
-            "sector_type": str(row.get("sector_type") or row.get("type") or row.get("BlockType") or ""),
+            "sector_type": str(
+                row.get("sector_type") or row.get("type") or row.get("BlockType") or ""
+            ),
         }
     return list(sectors.values())
 

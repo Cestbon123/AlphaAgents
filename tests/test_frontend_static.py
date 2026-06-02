@@ -8,32 +8,38 @@ CHART = Path("frontend/scripts/chart.js")
 NO_CARD_GUIDE = Path("docs/frontend-design/no-card-baseline.md")
 
 
-def test_frontend_has_four_entry_stock_centric_navigation():
+def test_frontend_has_chat_first_three_panel_navigation():
     html = HTML.read_text(encoding="utf-8")
     script = APP.read_text(encoding="utf-8")
 
-    assert 'data-view-target="market"' in html
+    assert 'data-view-target="chat"' in html
     assert 'data-view-target="strategies"' in html
     assert 'data-view-target="cases"' in html
     assert 'data-view-target="reports"' in html
-    assert "看盘选股" in html
-    assert "案例库" in html
-    assert "分析报告" in html
+    assert "AlphaAgents" in html
+    assert "策略" in html
+    assert "案例" in html
+    assert "报告" in html
     assert "复盘" not in _side_nav_slice(html)
     assert "沉淀" not in _side_nav_slice(html)
     assert "设置" not in _side_nav_slice(html)
     assert _side_nav_slice(html).count('class="nav-item') == 4
     assert "switchView" in script
     assert "viewTitles" in script
-    assert "resizeMarketChart" in script
-    assert "window.AlphaAgentsChart?.resize?.()" in script
+    assert 'id="agent-history-list"' in html
+    assert 'id="agent-chat"' in html
+    assert 'id="right-panel"' in html
+    assert 'id="rp-chart"' in html
+    assert 'id="rp-workspace"' in html
+    assert 'id="rp-selection"' in html
+    assert "initAgentChat" in script
 
 
-def test_market_view_embeds_stock_workspace_and_actions():
+def test_right_panel_embeds_read_only_stock_workspace():
     html = HTML.read_text(encoding="utf-8")
     script = APP.read_text(encoding="utf-8")
 
-    assert 'data-view="market"' in html
+    assert 'id="right-panel"' in html
     assert 'id="stock-workspace-symbol"' not in html
     assert "data-stock-workspace-load" not in html
     assert 'id="stock-workspace-content"' not in html
@@ -41,36 +47,32 @@ def test_market_view_embeds_stock_workspace_and_actions():
     assert 'id="stock-timeline"' not in html
     assert 'class="timeline-panel"' not in html
     assert "workspace-subsection" not in html
-    assert 'data-workspace-action="analysis"' in html
-    assert 'data-workspace-action="operation"' in html
-    assert 'data-workspace-action="review"' in html
-    assert 'data-workspace-action="deposition"' in html
-    assert 'data-workspace-panel="analysis"' in html
-    assert "data-stock-research-run" in html
-    assert "data-stock-operation-save" in html
-    assert "data-stock-review-save" in html
-    assert "data-stock-deposition-save" in html
+    assert 'data-workspace-action=' not in html
+    assert 'data-workspace-panel=' not in html
+    assert "data-stock-research-run" not in html
+    assert "data-stock-operation-save" not in html
+    assert "data-stock-review-save" not in html
+    assert "data-stock-deposition-save" not in html
     assert "let currentSymbol" in script
     assert "setCurrentSymbol" in script
     assert "loadStockWorkspace" in script
-    assert "showWorkspaceAction" in script
     assert "beginButtonFeedback" in script
 
 
-def test_market_view_uses_sector_filters_and_stock_list():
+def test_chat_layout_uses_right_panel_stock_list_without_top_search():
     html = HTML.read_text(encoding="utf-8")
     script = APP.read_text(encoding="utf-8")
     api = API.read_text(encoding="utf-8")
 
-    assert 'id="sector-search"' in html
-    assert 'id="sector-filter-list"' in html
-    assert "market-command-bar" in html
-    assert 'data-sector-type=' in html
+    assert 'id="sector-search"' not in html
+    assert "market-search-strip" not in html
+    assert 'id="agent-chat"' in html
+    assert 'id="right-panel"' in html
+    assert 'id="rp-selection"' in html
     assert 'class="stock-list-table"' in html
-    assert 'id="active-symbol-status"' in html
     assert 'id="sync-progress"' in html
     assert 'id="global-symbol-search"' not in html
-    assert "normalizeSymbolSearch" in script
+    assert "normalizeSymbolSearch" not in script
     assert "total_files" in script
     assert "renderSelectionResultsTable" in script
     assert "listMarketSectors" in api
@@ -81,9 +83,9 @@ def test_market_view_uses_sector_filters_and_stock_list():
 
 def test_market_sector_filter_results_are_not_overwritten_by_stale_requests():
     script = APP.read_text(encoding="utf-8")
-    refresh_block = script[
-        script.index("async function refreshDashboard") : script.index("async function runSelection")
-    ]
+    refresh_start = script.index("async function refreshDashboard")
+    refresh_end = script.index("async function runSelection")
+    refresh_block = script[refresh_start:refresh_end]
 
     assert "latestMarketStocksRequestId" in script
     assert "requestId !== latestMarketStocksRequestId" in script
@@ -107,7 +109,8 @@ def test_strategies_view_configures_selection_strategy():
     assert "draftStrategy" in api
     assert "/strategies/draft" in api
     assert "strategyParamMeta" in script
-    assert "strategy-param-card" in script
+    assert "strategyFormulaBlocks" in script
+    assert "formula-block" in script
     assert "loadStrategies" in script
     assert "saveActiveStrategy" in script
     assert "draftActiveStrategy" in script
@@ -177,13 +180,13 @@ def test_frontend_uses_divider_first_no_card_visual_baseline():
     css = CSS.read_text(encoding="utf-8")
     guide = NO_CARD_GUIDE.read_text(encoding="utf-8")
 
-    assert "./styles/app.css?v=20260529-2" in html
+    assert "./styles/app.css?v=20260603-10" in html
     assert "Divider-first visual baseline" in css
     assert "Final no-card baseline" in css
     assert ".summary-card" in css
     assert ".case-card" in css
-    assert ".status-strip.is-compact.market-command-bar" in css
-    assert "width: min(300px, 28vw)" in css
+    assert ".agent-chat-panel" in css
+    assert "#right-panel" in css
     assert "border-bottom: 1px solid var(--line)" in css
     assert "background: transparent !important" in css
     assert "默认不使用卡片式容器" in guide
@@ -198,10 +201,9 @@ def test_frontend_keeps_local_klinecharts_contract():
     assert "./vendor/klinecharts/klinecharts.min.js" in html
     assert 'id="kline-chart"' in html
     assert 'id="chart-status"' in html
-    assert 'id="active-symbol-status" class="visually-hidden"' in html
     assert "本地日线 /" not in html
     assert "VOL/MACD/KDJ" not in html
-    assert "data-chart-symbol" in html
+    assert "data-chart-expand" in html
     assert "klinecharts.init" in script
     assert "chart.applyNewData" in script
     assert "SHORT_TERM_BRICK" in script
@@ -210,7 +212,7 @@ def test_frontend_keeps_local_klinecharts_contract():
     assert "indicator_pane_zhixing_wash_short" in script
     assert "const PANE_HEIGHTS" in script
     assert "const DEFAULT_SYMBOL = \"000001.SH\"" in script
-    assert "const DEFAULT_INDICATOR_PANES" in script
+    assert "const SUB_INDICATORS" in script
     assert "ensureDefaultIndicators();" in script
     assert "defaultIndicatorsCreated" in script
     assert "setChartStatus(`${name}${symbol}`)" in script
@@ -218,20 +220,20 @@ def test_frontend_keeps_local_klinecharts_contract():
     assert "resizeVisibleChart" in script
     assert "chartContainer.clientWidth <= 0" in script
     assert "resize: () => requestAnimationFrame(resizeVisibleChart)" in script
-    assert "./scripts/chart.js?v=20260529-1" in html
-    assert "height: 1280px" in css
-    assert "min-height: 1280px" in css
+    assert "./scripts/chart.js?v=20260603-1" in html
+    assert ".chart-overlay" in css
+    assert "is-chart-expanded" in css
 
 
-def test_frontend_actions_call_stock_scoped_apis():
+def test_frontend_keeps_stock_scoped_apis_for_agent_tools_only():
     script = APP.read_text(encoding="utf-8")
     api = API.read_text(encoding="utf-8")
 
     assert "window.AlphaAgentsApi.getStockWorkspace" in script
-    assert "window.AlphaAgentsApi.runStockResearch" in script
-    assert "window.AlphaAgentsApi.saveStockOperation" in script
-    assert "window.AlphaAgentsApi.saveStockReview" in script
-    assert "window.AlphaAgentsApi.saveStockDeposition" in script
+    assert "window.AlphaAgentsApi.runStockResearch" not in script
+    assert "window.AlphaAgentsApi.saveStockOperation" not in script
+    assert "window.AlphaAgentsApi.saveStockReview" not in script
+    assert "window.AlphaAgentsApi.saveStockDeposition" not in script
     assert "/stocks/${encodeURIComponent(symbol)}/workspace" in api
     assert "/stocks/${encodeURIComponent(symbol)}/reviews" in api
     assert "/stocks/${encodeURIComponent(symbol)}/depositions" in api
@@ -281,11 +283,11 @@ def test_status_strip_shows_market_data_date_instead_of_render_time():
     assert "function setDataDate" in script
     assert "market_status?.latest_trade_date" in script
     assert "freshness?.latest_trade_date" in script
-    assert "./scripts/app.js?v=20260529-1" in html
+    assert "./scripts/app.js?v=20260603-7" in html
     assert "toLocaleString" not in script
 
 
 def _side_nav_slice(html: str) -> str:
-    start = html.index('<aside class="side-nav"')
+    start = html.index('<aside class="side-nav')
     end = html.index("</aside>", start)
     return html[start:end]

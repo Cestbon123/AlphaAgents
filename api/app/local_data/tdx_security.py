@@ -4,7 +4,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 CODE_PATTERN = re.compile(rb"([0-9]{6})")
 NAME_OFFSET = 31
 NAME_LENGTH = 32

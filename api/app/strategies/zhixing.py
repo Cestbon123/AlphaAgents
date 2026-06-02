@@ -8,7 +8,6 @@ from app.local_data.repository import LocalMarketRepository
 from app.strategies.config import DEFAULT_ZHIXING_PARAMS, normalize_zhixing_params
 from app.strategies.filters import should_exclude_from_strategy_by_default
 
-
 ZHIXING_LOOKBACK = 140
 MIN_REQUIRED_BARS = 115
 EPSILON = 1e-9
@@ -22,7 +21,7 @@ class ZhixingStrategyParams:
     change_max_pct: float = DEFAULT_ZHIXING_PARAMS["change_max_pct"]
 
     @classmethod
-    def from_mapping(cls, params: dict[str, Any] | None) -> "ZhixingStrategyParams":
+    def from_mapping(cls, params: dict[str, Any] | None) -> ZhixingStrategyParams:
         normalized = normalize_zhixing_params(dict(params or {}))
         return cls(
             j_max=normalized["j_max"],

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from datetime import date, datetime, time, timedelta
+from datetime import datetime, time, timedelta
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -10,7 +10,6 @@ from zoneinfo import ZoneInfo
 from app.local_data.importer import bootstrap_tdx_daily, count_tdx_day_files
 from app.local_data.repository import LocalMarketRepository
 from app.local_data.tdx_sector import import_tdx_local_metadata
-
 
 CHINA_TZ = ZoneInfo("Asia/Shanghai")
 TDX_ACTION = "请打开并登录通达信终端，下载日线数据后重新同步。"
@@ -94,7 +93,10 @@ class DataSyncService:
                         "daily_bars",
                         "同步日线行情",
                         "skipped",
-                        f"本地日线数据已达到当前预期交易日，已跳过全量导入。通达信目录共有 {total_files} 个日线文件。",
+                        (
+                            "本地日线数据已达到当前预期交易日，已跳过全量导入。"
+                            f"通达信目录共有 {total_files} 个日线文件。"
+                        ),
                     )
                 )
             else:
@@ -108,7 +110,11 @@ class DataSyncService:
                             "daily_bars",
                             "同步日线行情",
                             "completed",
-                            f"已导入 {daily_result['imported_files']}/{daily_result['total_files']} 个文件，{daily_result['imported_bars']} 条日线。",
+                            (
+                                f"已导入 {daily_result['imported_files']}/"
+                                f"{daily_result['total_files']} 个文件，"
+                                f"{daily_result['imported_bars']} 条日线。"
+                            ),
                         )
                     )
                 except Exception as exc:
@@ -196,7 +202,10 @@ class DataSyncService:
                 "tdx_metadata",
                 "同步股票和板块元数据",
                 "completed",
-                f"已导入 {report['sectors']} 个行业/板块/概念、{report['sector_members']} 条成分关系。",
+                (
+                    f"已导入 {report['sectors']} 个行业/板块/概念、"
+                    f"{report['sector_members']} 条成分关系。"
+                ),
             ),
             report,
         )
@@ -209,7 +218,10 @@ class DataSyncService:
         message = (
             "本地日线数据已达到当前预期交易日。"
             if is_fresh
-            else f"本地日线最新交易日为 {latest_trade_date or '无'}，预期至少为 {expected_trade_date}。"
+            else (
+                f"本地日线最新交易日为 {latest_trade_date or '无'}，"
+                f"预期至少为 {expected_trade_date}。"
+            )
         )
         return {
             "current_time": current_time.isoformat(timespec="seconds"),

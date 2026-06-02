@@ -360,6 +360,86 @@ class LocalMarketRepository:
             )
         return stocks
 
+    def list_stock_quotes_paginated(
+        self,
+        *,
+        sector_code: str = "",
+        limit: int = 10,
+        offset: int = 0,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """Same as list_stock_quotes but returns (results, total_count)."""
+        if not self.db_path.exists():
+            return [], 0
+
+        safe_limit = max(1, min(limit, 500))
+        safe_offset = max(0, offset)
+        sector_members = self.list_sector_members(sector_code) if sector_code else []
+        if sector_code and not sector_members:
+            return [], 0
+
+        filters = [_a_share_symbol_filter("symbol")]
+        data_filters = [_a_share_symbol_filter("m.symbol")]
+        parameters: list[object] = []
+        if sector_members:
+            placeholders = ",".join("?" for _ in sector_members)
+            member_filter = f"symbol IN ({placeholders})"
+            filters.append(member_filter)
+            data_filters.append(f"m.symbol IN ({placeholders})")
+            parameters.extend(sector_members)
+        symbol_filter = f"WHERE {' AND '.join(filters)}"
+        data_filter = ' AND '.join(data_filters)
+
+        try:
+            with self._connect() as connection:
+                if not self._table_exists(connection, "market_daily"):
+                    return [], 0
+
+                # Count total
+                count_row = connection.execute(
+                    f"SELECT COUNT(DISTINCT symbol) FROM market_daily {symbol_filter}",
+                    (*parameters,),
+                ).fetchone()
+                total = count_row[0] if count_row else 0
+
+                # Fetch page — optimized with subquery instead of window function
+                rows = connection.execute(
+                    f"""
+                    SELECT
+                        m.symbol,
+                        COALESCE(p.name, md.name, m.symbol) AS name,
+                        m.trade_date, m.close,
+                        (SELECT close FROM market_daily md2
+                         WHERE md2.symbol = m.symbol AND md2.trade_date < m.trade_date
+                         ORDER BY md2.trade_date DESC LIMIT 1) AS previous_close
+                    FROM market_daily m
+                    LEFT JOIN security_profiles p ON p.symbol = m.symbol
+                    LEFT JOIN security_metadata md ON md.symbol = m.symbol
+                    WHERE m.trade_date = (
+                        SELECT MAX(md3.trade_date) FROM market_daily md3 WHERE md3.symbol = m.symbol
+                    )
+                    AND ({data_filter})
+                    ORDER BY m.trade_date DESC, m.symbol ASC
+                    LIMIT ? OFFSET ?
+                    """,
+                    (*parameters, safe_limit, safe_offset),
+                ).fetchall()
+        except (sqlite3.OperationalError, sqlite3.DatabaseError) as exc:
+            raise LocalMarketDataUnavailable(str(exc)) from exc
+
+        stocks: list[dict[str, Any]] = []
+        for row in rows:
+            close = float(row["close"])
+            previous_close = row["previous_close"]
+            change_pct = None
+            if previous_close not in (None, 0):
+                change_pct = round((close - float(previous_close)) / float(previous_close) * 100, 2)
+            stocks.append({
+                "symbol": row["symbol"], "name": row["name"],
+                "latest_trade_date": row["trade_date"],
+                "price": round(close, 4), "change_pct": change_pct,
+            })
+        return stocks, total
+
     def upsert_security_metadata(
         self, rows: list[dict[str, Any]], source: str = "tdx"
     ) -> int:

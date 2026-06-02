@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Any
 
 from app.local_data.repository import LocalMarketRepository
-from app.local_data.tdx_security import parse_tdx_security_directory
 from app.local_data.tdx_day import parse_tdx_day_file, symbol_from_tdx_day_path
+from app.local_data.tdx_security import parse_tdx_security_directory
 
 
 def bootstrap_tdx_daily(tdx_root: str | Path, db_path: str | Path) -> dict[str, Any]:

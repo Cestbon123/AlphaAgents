@@ -23,8 +23,16 @@ def test_parse_tdx_sector_metadata_maps_industry_keys(tmp_path):
 
     metadata, key_map = parse_tdx_sector_metadata(hq_cache)
 
-    assert {"sector_code": "880471.SH", "sector_name": "银行", "sector_type": "行业"} in metadata
-    assert {"sector_code": "880534.SH", "sector_name": "锂电池概念", "sector_type": "概念"} in metadata
+    assert {
+        "sector_code": "880471.SH",
+        "sector_name": "银行",
+        "sector_type": "行业",
+    } in metadata
+    assert {
+        "sector_code": "880534.SH",
+        "sector_name": "锂电池概念",
+        "sector_type": "概念",
+    } in metadata
     assert key_map["T1001"] == "880471.SH"
     assert key_map["X500102"] == "881388.SH"
 

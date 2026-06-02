@@ -1,7 +1,6 @@
-from pathlib import Path
 import struct
+from pathlib import Path
 from typing import Any
-
 
 TDX_DAY_RECORD_SIZE = 32
 TDX_DAY_STRUCT = struct.Struct("<IIIIIfII")

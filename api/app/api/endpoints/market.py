@@ -39,14 +39,18 @@ def list_market_sectors(
 @router.get("/stocks")
 def list_market_stocks(
     sector_code: str = Query("", max_length=64),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(10, ge=1, le=500),
+    offset: int = Query(0, ge=0),
 ):
     settings = get_settings()
     repository = LocalMarketRepository(settings.data_db)
     try:
-        stocks = repository.list_stock_quotes(sector_code=sector_code, limit=limit)
+        stocks, total = repository.list_stock_quotes_paginated(
+            sector_code=sector_code, limit=limit, offset=offset
+        )
     except LocalMarketDataUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return {"stocks": stocks, "total": total, "limit": limit, "offset": offset}
     return {"stocks": stocks}
 
 

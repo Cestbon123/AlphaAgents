@@ -82,8 +82,10 @@ class ReviewWorkflow:
             )
         else:
             deviations = "暂无偏差"
+        case_count = summary.get("case_count", 0)
+        depositable_count = summary.get("depositable_count", 0)
         return [
-            f"本周复盘案例 {summary.get('case_count', 0)} 条，可沉淀 {summary.get('depositable_count', 0)} 条",
+            f"本周复盘案例 {case_count} 条，可沉淀 {depositable_count} 条",
             f"偏差分布：{deviations}",
         ]
 
@@ -107,7 +109,11 @@ def _deviation(result: SelectionResult, operation: OperationRecord | None) -> st
 def _review_conclusion(result: SelectionResult, operation: OperationRecord | None) -> str:
     if operation is None:
         return "待确认案例"
-    if result.action == SelectionAction.BUY and "未" in operation.user_action and "买" in operation.user_action:
+    if (
+        result.action == SelectionAction.BUY
+        and "未" in operation.user_action
+        and "买" in operation.user_action
+    ):
         return "错过机会"
     if result.action == SelectionAction.BUY:
         return "成功案例"

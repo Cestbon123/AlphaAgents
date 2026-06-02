@@ -5,35 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AlphaAgents</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="./styles/app.css?v=20260529-2" />
+    <link rel="stylesheet" href="./styles/app.css?v=20260603-10" />
   </head>
   <body>
     <main class="app-shell">
-      <aside class="side-nav" aria-label="主导航">
-        <div class="brand-mark" aria-label="AlphaAgents">A</div>
-        <button class="nav-item is-active" type="button" data-view-target="market" aria-label="看盘选股">
-          <svg aria-hidden="true"><use href="#icon-search-check"></use></svg>
-          <span>看盘选股</span>
-        </button>
-        <button class="nav-item" type="button" data-view-target="strategies" aria-label="选股策略">
-          <svg aria-hidden="true"><use href="#icon-sliders"></use></svg>
-          <span>选股策略</span>
-        </button>
-        <button class="nav-item" type="button" data-view-target="cases" aria-label="案例库">
-          <svg aria-hidden="true"><use href="#icon-library"></use></svg>
-          <span>案例库</span>
-        </button>
-        <button class="nav-item" type="button" data-view-target="reports" aria-label="分析报告">
-          <svg aria-hidden="true"><use href="#icon-file-text"></use></svg>
-          <span>分析报告</span>
+      <aside class="side-nav is-collapsed" aria-label="主导航">
+        <div class="side-nav-top">
+          <button class="side-nav-toggle" type="button" aria-label="展开侧边栏">
+            <svg aria-hidden="true"><use href="#icon-sidebar-toggle"></use></svg>
+          </button>
+          <div class="brand-mark" aria-label="AlphaAgents">A</div>
+          <span class="brand-text">AlphaAgents</span>
+          <button class="nav-item is-active" type="button" data-view-target="chat" aria-label="对话">
+            <svg aria-hidden="true"><use href="#icon-search-check"></use></svg>
+            <span>对话</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="strategies" aria-label="选股策略">
+            <svg aria-hidden="true"><use href="#icon-sliders"></use></svg>
+            <span>策略</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="cases" aria-label="案例库">
+            <svg aria-hidden="true"><use href="#icon-library"></use></svg>
+            <span>案例</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="reports" aria-label="分析报告">
+            <svg aria-hidden="true"><use href="#icon-file-text"></use></svg>
+            <span>报告</span>
+          </button>
+        </div>
+        <nav class="side-nav-history" id="agent-history-list"></nav>
+        <button class="history-new-btn" data-agent-new-chat type="button" aria-label="新对话">
+          <span class="history-new-icon" aria-hidden="true">+</span>
+          <span class="history-new-text">新对话</span>
         </button>
       </aside>
 
       <section class="main-stage">
+        <div id="chart-overlay" class="chart-overlay"></div>
         <header class="top-bar">
           <div>
-            <h1 id="page-title">看盘选股</h1>
-            <span id="page-subtitle">Market Screener</span>
+            <h1 id="page-title">AlphaAgents</h1>
+            <span id="page-subtitle">对话</span>
           </div>
           <div class="top-status" aria-label="系统状态">
             <span><b>后端</b><strong class="live-dot" id="data-state">连接中</strong></span>
@@ -46,87 +58,17 @@
           </div>
         </header>
 
-        <section class="status-strip is-compact market-command-bar" aria-label="市场数据状态与筛选">
-          <div class="market-filter-row">
-            <div class="chip-row">
-              <button class="chip is-active" type="button" data-sector-type="">全部</button>
-              <button class="chip" type="button" data-sector-type="行业">行业</button>
-              <button class="chip" type="button" data-sector-type="概念">概念</button>
-              <button class="chip" type="button" data-sector-type="地区">地区</button>
+        <!-- Chat Panel (main area) -->
+        <section id="agent-chat" class="agent-chat-panel">
+          <div id="agent-messages" class="agent-messages"></div>
+          <div class="agent-input-row">
+            <div class="agent-composer">
+              <div id="agent-skill-menu" class="agent-skill-menu is-hidden" role="listbox"></div>
+              <div id="agent-selected-skill" class="agent-selected-skill is-hidden"></div>
+              <input id="agent-input" type="text" placeholder="问 AlphaAgents 任何问题，输入 / 选技能" />
             </div>
-            <label class="sector-search-inline">
-              <svg aria-hidden="true"><use href="#icon-search"></use></svg>
-              <input id="sector-search" type="text" placeholder="搜索股票、代码、板块、行业、概念..." />
-            </label>
-            <button class="secondary-action" type="button" data-view-target="strategies">查看策略</button>
+            <button class="primary-action" type="button" data-agent-send>发送</button>
           </div>
-          <div id="sector-filter-list" class="sector-list sector-list-inline"></div>
-        </section>
-
-        <section class="view-panel is-active" data-view="market" aria-label="看盘选股">
-          <section class="market-grid">
-            <section class="panel chart-panel">
-              <div class="section-heading chart-heading">
-                <div>
-                  <h2 id="chart-title"><strong id="chart-status">000001.SH</strong></h2>
-                  <span id="active-symbol-status" class="visually-hidden">000001.SH</span>
-                </div>
-                <div class="chart-toolbar">
-                  <button class="symbol-tab is-active" type="button" data-chart-symbol="000001.SH">日K</button>
-                  <button class="symbol-tab" type="button">周K</button>
-                  <button class="symbol-tab" type="button">月K</button>
-                  <button class="symbol-tab" type="button">分时</button>
-                </div>
-              </div>
-              <div id="kline-chart" class="kline-chart" role="img" aria-label="当前股票 K 线图"></div>
-              <a class="chart-attribution" href="https://klinecharts.com/" target="_blank" rel="noopener noreferrer">
-                Charts by KLineCharts
-              </a>
-            </section>
-
-            <aside class="panel insight-panel">
-              <div class="section-heading workspace-heading">
-                <h2>个股工作台</h2>
-                <span id="stock-workspace-status">等待读取当前个股上下文</span>
-              </div>
-              <div class="stock-actions workspace-action-tabs" role="tablist" aria-label="个股操作">
-                <button class="is-active" type="button" data-workspace-action="analysis">生成分析</button>
-                <button type="button" data-workspace-action="operation">记录操作</button>
-                <button type="button" data-workspace-action="review">写复盘</button>
-                <button type="button" data-workspace-action="deposition">沉淀经验</button>
-              </div>
-              <div class="workspace-action-detail">
-                <section class="workspace-action-panel is-active" data-workspace-panel="analysis">
-                  <button class="primary-action" type="button" data-stock-research-run>生成分析报告</button>
-                  <div id="agent-insights" class="agent-insights"></div>
-                </section>
-                <section class="workspace-action-panel" data-workspace-panel="operation">
-                  <input id="stock-operation-action" type="text" placeholder="操作动作：观察、未介入..." />
-                  <input id="stock-operation-reason" type="text" placeholder="操作理由" />
-                  <button class="primary-action" type="button" data-stock-operation-save>保存操作</button>
-                </section>
-                <section class="workspace-action-panel" data-workspace-panel="review">
-                  <input id="stock-review-conclusion" type="text" placeholder="复盘结论" />
-                  <input id="stock-review-reason" type="text" placeholder="关键原因" />
-                  <button class="primary-action" type="button" data-stock-review-save>保存复盘</button>
-                </section>
-                <section class="workspace-action-panel" data-workspace-panel="deposition">
-                  <input id="stock-deposition-title" type="text" placeholder="沉淀标题" />
-                  <textarea id="stock-deposition-content" rows="4" placeholder="沉淀内容"></textarea>
-                  <button class="primary-action" type="button" data-stock-deposition-save>保存沉淀</button>
-                </section>
-              </div>
-            </aside>
-
-            <section class="panel selection-panel">
-              <div class="section-heading">
-                <h2>筛选结果</h2>
-                <span id="selection-page-status">共 0 只</span>
-              </div>
-              <div id="selection-results" class="stock-list-table"></div>
-            </section>
-
-          </section>
         </section>
 
         <section class="view-panel" data-view="strategies" aria-label="选股策略">
@@ -134,7 +76,7 @@
             <aside class="panel strategies-list-panel">
               <div class="section-heading">
                 <h2>选股策略</h2>
-                <button class="primary-action" type="button" data-run="selection">执行选股</button>
+                <button class="primary-action" type="button" data-strategy-new>新建策略</button>
               </div>
               <div id="strategy-list" class="strategy-list"></div>
             </aside>
@@ -185,7 +127,6 @@
             <aside class="panel reports-list-panel">
               <div class="section-heading">
                 <h2>分析报告</h2>
-                <button class="primary-action" type="button" data-stock-research-run>新建报告</button>
               </div>
               <div class="chip-row report-tabs">
                 <button class="chip is-active" type="button">全部报告</button>
@@ -201,8 +142,6 @@
                 <h2>报告详情</h2>
                 <div class="report-actions">
                   <button type="button" data-open-market-view>打开个股工作台</button>
-                  <button type="button" data-stock-review-save>写复盘</button>
-                  <button type="button" data-stock-deposition-save>沉淀为案例</button>
                 </div>
               </div>
               <div id="research-report-content" class="report-detail"></div>
@@ -211,6 +150,57 @@
         </section>
 
       </section>
+
+      <div class="panel-resize-handle" id="panel-resize-handle" title="拖拽调整面板宽度"></div>
+
+      <!-- Right Panel: K-line + Workspace + Selection -->
+      <section id="right-panel">
+        <div class="right-panel-inner">
+          <div class="rp-section" id="rp-chart">
+            <div class="rp-section-header">
+              <span>K 线 <strong id="chart-status">--</strong></span>
+              <div>
+                <button class="rp-section-action" data-chart-expand title="放大图表">🔍</button>
+                <span class="rp-section-toggle" data-rp-toggle="chart">▼</span>
+              </div>
+            </div>
+            <div id="chart-quote-strip" class="chart-quote-strip" aria-label="K 线行情摘要">
+              <span>开 <strong>--</strong></span>
+              <span>收 <strong>--</strong></span>
+              <span>高 <strong>--</strong></span>
+              <span>低 <strong>--</strong></span>
+              <span>涨幅 <strong>--</strong></span>
+              <span>振幅 <strong>--</strong></span>
+            </div>
+            <div class="rp-section-body">
+              <div id="kline-chart" class="kline-chart" role="img" aria-label="K 线图"></div>
+              <a class="chart-attribution" href="https://klinecharts.com/" target="_blank" rel="noopener noreferrer">Charts by KLineCharts</a>
+            </div>
+          </div>
+
+          <div class="rp-section" id="rp-workspace">
+            <div class="rp-section-header">
+              <span>个股工作台 <span id="stock-workspace-status">--</span></span>
+              <span class="rp-section-toggle" data-rp-toggle="workspace">▼</span>
+            </div>
+            <div class="rp-section-body">
+              <div id="stock-alerts" class="stock-alerts"></div>
+              <div id="agent-insights" class="agent-insights"></div>
+            </div>
+          </div>
+
+          <div class="rp-section" id="rp-selection">
+            <div class="rp-section-header">
+              <span>筛选结果 <span id="selection-page-status">共 0 只</span></span>
+              <span class="rp-section-toggle" data-rp-toggle="selection">▼</span>
+            </div>
+            <div class="rp-section-body">
+              <div id="selection-results" class="stock-list-table"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
 
     <svg class="icon-sprite" aria-hidden="true">
@@ -220,11 +210,13 @@
       <symbol id="icon-file-text" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></symbol>
       <symbol id="icon-arrow-up-right" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></symbol>
       <symbol id="icon-sliders" viewBox="0 0 24 24"><path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path></symbol>
+      <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+      <symbol id="icon-sidebar-toggle" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M9 4v16"></path><path d="m13 9 3 3-3 3"></path></symbol>
     </svg>
 
     <script src="./vendor/klinecharts/klinecharts.min.js"></script>
-    <script src="./scripts/api.js?v=20260526-2"></script>
-    <script src="./scripts/app.js?v=20260529-1"></script>
-    <script src="./scripts/chart.js?v=20260529-1"></script>
+    <script src="./scripts/api.js?v=20260603-2"></script>
+    <script src="./scripts/app.js?v=20260603-7"></script>
+    <script src="./scripts/chart.js?v=20260603-1"></script>
   </body>
 </html>

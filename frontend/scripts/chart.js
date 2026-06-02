@@ -1,5 +1,6 @@
 const chartContainer = document.querySelector("#kline-chart");
 const chartStatus = document.querySelector("#chart-status");
+const chartQuoteStrip = document.querySelector("#chart-quote-strip");
 const symbolButtons = document.querySelectorAll("[data-chart-symbol]");
 
 const ZHIXING_TREND = "ZHIXING_TREND";
@@ -15,21 +16,12 @@ const PANE_HEIGHTS = {
   zhixingWashShort: 180,
 };
 const DEFAULT_SYMBOL = "000001.SH";
-const DEFAULT_INDICATOR_PANES = [
-  ["ZHIXING_TREND", true, { id: "candle_pane" }],
+const SUB_INDICATORS = [
   ["VOL", false, { id: "indicator_pane_vol", height: PANE_HEIGHTS.volume }],
   ["MACD", false, { id: "indicator_pane_macd", height: PANE_HEIGHTS.macd }],
   ["KDJ", false, { id: "indicator_pane_kdj", height: PANE_HEIGHTS.kdj }],
-  [
-    SHORT_TERM_BRICK,
-    false,
-    { id: "indicator_pane_short_term_brick", height: PANE_HEIGHTS.shortTermBrick },
-  ],
-  [
-    ZHIXING_WASH_SHORT,
-    false,
-    { id: "indicator_pane_zhixing_wash_short", height: PANE_HEIGHTS.zhixingWashShort },
-  ],
+  [SHORT_TERM_BRICK, false, { id: "indicator_pane_short_term_brick", height: PANE_HEIGHTS.shortTermBrick }],
+  [ZHIXING_WASH_SHORT, false, { id: "indicator_pane_zhixing_wash_short", height: PANE_HEIGHTS.zhixingWashShort }],
 ];
 
 function setChartStatus(message) {
@@ -48,16 +40,79 @@ function toTimestamp(time) {
   return new Date(`${time}T00:00:00+08:00`).getTime();
 }
 
+function readNumber(source, keys, fallback = NaN) {
+  for (const key of keys) {
+    const value = source?.[key];
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+      return numeric;
+    }
+  }
+  return fallback;
+}
+
 function normalizeDailyBars(bars) {
   return bars.map((bar, index) => ({
     timestamp: toTimestamp(bar.time),
-    open: Number(bar.open),
-    high: Number(bar.high),
-    low: Number(bar.low),
-    close: Number(bar.close),
+    open: readNumber(bar, ["open", "open_price", "o"]),
+    high: readNumber(bar, ["high", "high_price", "h"]),
+    low: readNumber(bar, ["low", "low_price", "l"]),
+    close: readNumber(bar, ["close", "close_price", "price", "c"]),
     volume: Number(bar.volume || (index + 1) * 1000000),
     turnover: Number(bar.amount || 0),
   }));
+}
+
+function formatPrice(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "--";
+  return numeric.toFixed(numeric >= 100 ? 2 : 3).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function formatQuotePct(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "--";
+  return `${numeric > 0 ? "+" : ""}${numeric.toFixed(2)}%`;
+}
+
+function setQuoteStripEmpty() {
+  if (!chartQuoteStrip) return;
+  chartQuoteStrip.querySelectorAll("strong").forEach((item) => {
+    item.className = "";
+    item.textContent = "--";
+  });
+}
+
+function updateQuoteStrip(bars) {
+  if (!chartQuoteStrip || !bars || !bars.length) {
+    setQuoteStripEmpty();
+    return;
+  }
+  const latest = bars[bars.length - 1];
+  const previous = bars.length > 1 ? bars[bars.length - 2] : null;
+  const previousClose = readNumber(previous, ["close"], latest.open);
+  const { open, close, high, low } = latest;
+  const changePct = Number.isFinite(previousClose) && previousClose !== 0
+    ? ((close - previousClose) / previousClose) * 100
+    : NaN;
+  const amplitudePct = Number.isFinite(previousClose) && previousClose !== 0
+    ? ((high - low) / previousClose) * 100
+    : NaN;
+  const values = [
+    formatPrice(open),
+    formatPrice(close),
+    formatPrice(high),
+    formatPrice(low),
+    formatQuotePct(changePct),
+    formatQuotePct(amplitudePct),
+  ];
+  chartQuoteStrip.querySelectorAll("strong").forEach((item, index) => {
+    item.className = "";
+    if (index === 4 && Number.isFinite(changePct)) {
+      item.classList.add(changePct < 0 ? "price-down" : "price-up");
+    }
+    item.textContent = values[index] || "--";
+  });
 }
 
 function movingAverage(values, period, index) {
@@ -448,23 +503,32 @@ function initKlineChart() {
         activeBackgroundColor: "rgba(49, 219, 199, 0.08)",
       },
       candle: {
+        tooltip: {
+          showRule: "none",
+        },
         bar: {
-          upColor: "#00e676",
-          downColor: "#ff3d3d",
+          upColor: "#ff3d3d",
+          downColor: "#00e676",
           noChangeColor: "#d4dde5",
-          upBorderColor: "#00e676",
-          downBorderColor: "#ff3d3d",
+          upBorderColor: "#ff3d3d",
+          downBorderColor: "#00e676",
           noChangeBorderColor: "#d4dde5",
-          upWickColor: "#00e676",
-          downWickColor: "#ff3d3d",
+          upWickColor: "#ff3d3d",
+          downWickColor: "#00e676",
           noChangeWickColor: "#d4dde5",
         },
       },
       indicator: {
         tooltip: {
-          showName: true,
-          showParams: true,
+          showRule: "none",
+          showName: false,
+          showParams: false,
         },
+        bars: [{
+          upColor: "#ff3d3d",
+          downColor: "#00e676",
+          noChangeColor: "#d4dde5",
+        }],
         lines: [
           { color: "#f4aa35", size: 1.2, style: "solid", dashedValue: [], smooth: false },
           { color: "#ffffff", size: 1, style: "solid", dashedValue: [], smooth: false },
@@ -485,31 +549,6 @@ function initKlineChart() {
         type: "candle",
         content: [ZHIXING_TREND],
         options: { id: "candle_pane", height: PANE_HEIGHTS.candle },
-      },
-      {
-        type: "indicator",
-        content: ["VOL"],
-        options: { id: "indicator_pane_vol", height: PANE_HEIGHTS.volume },
-      },
-      {
-        type: "indicator",
-        content: ["MACD"],
-        options: { id: "indicator_pane_macd", height: PANE_HEIGHTS.macd },
-      },
-      {
-        type: "indicator",
-        content: ["KDJ"],
-        options: { id: "indicator_pane_kdj", height: PANE_HEIGHTS.kdj },
-      },
-      {
-        type: "indicator",
-        content: [SHORT_TERM_BRICK],
-        options: { id: "indicator_pane_short_term_brick", height: PANE_HEIGHTS.shortTermBrick },
-      },
-      {
-        type: "indicator",
-        content: [ZHIXING_WASH_SHORT],
-        options: { id: "indicator_pane_zhixing_wash_short", height: PANE_HEIGHTS.zhixingWashShort },
       },
     ],
   });
@@ -538,24 +577,37 @@ function initKlineChart() {
   let defaultIndicatorsCreated = false;
 
   function ensureDefaultIndicators() {
-    if (defaultIndicatorsCreated) {
-      return;
-    }
-    DEFAULT_INDICATOR_PANES.forEach(([name, isStack, paneOptions]) => {
-      chart.createIndicator(name, isStack, paneOptions);
-    });
+    if (defaultIndicatorsCreated) return;
+    // Create only the candle-pane indicator (ZHIXING_TREND)
+    chart.createIndicator(ZHIXING_TREND, true, { id: "candle_pane" });
     defaultIndicatorsCreated = true;
   }
 
+  var subIndicatorsCreated = false;
+  window.AlphaAgentsChartExpand = function () {
+    if (subIndicatorsCreated) return;
+    SUB_INDICATORS.forEach(function (args) {
+      chart.createIndicator(args[0], args[1], args[2]);
+    });
+    subIndicatorsCreated = true;
+  };
+
+  window.AlphaAgentsChartCollapse = function () {
+    // Sub-indicators stay but will be less visible in smaller right panel
+  };
+
   function renderBars(data) {
+    const normalizedBars = normalizeDailyBars(data);
     bindLatestBarToRightEdge();
-    chart.applyNewData(normalizeDailyBars(data), false);
+    chart.applyNewData(normalizedBars, false);
+    updateQuoteStrip(normalizedBars);
     ensureDefaultIndicators();
     bindLatestBarToRightEdge();
   }
 
   function renderNoData(symbol, reason) {
     chart.applyNewData([], false);
+    setQuoteStripEmpty();
     setChartStatus(symbol);
   }
 

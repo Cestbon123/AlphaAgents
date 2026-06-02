@@ -109,7 +109,10 @@ class DailyReportWorkflow:
     def _deposition_summary(self) -> str:
         if not self._deposition_candidates:
             return "暂无沉淀候选。"
-        counts = Counter(str(candidate.get("status", "")) for candidate in self._deposition_candidates)
+        counts = Counter(
+            str(candidate.get("status", ""))
+            for candidate in self._deposition_candidates
+        )
         details = "，".join(f"{status} {count}" for status, count in counts.items())
         return f"沉淀候选 {len(self._deposition_candidates)} 条，{details}。"
 

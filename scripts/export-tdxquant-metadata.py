@@ -8,7 +8,6 @@ import types
 from pathlib import Path
 from typing import Any
 
-
 LIST_TYPES = {
     5: "全部A股",
     51: "创业板",
